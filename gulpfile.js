@@ -49,7 +49,7 @@ gulp.task('watch', ['browser-sync', 'sass'], () => {
 
 gulp.task('scripts', (cb) => {
   pump([
-      gulp.src('public/js/*.js'),
+      gulp.src(['public/js/main.js','public/js/*.js']),
       concat('all.min.js'),
       babel({
         presets: ['@babel/env']
