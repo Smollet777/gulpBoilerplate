@@ -1,65 +1,65 @@
 const gulp = require('gulp'),
   browserSync = require('browser-sync').create(),
-  pump = require('pump'),
   sass = require('gulp-sass'),
   autoprefixer = require('gulp-autoprefixer'),
+  cleanCSS = require('gulp-clean-css'),
   concat = require('gulp-concat'),
   babel = require('gulp-babel'),
   uglify = require('gulp-uglify'),
   del = require('del');
 
-const AUTOPREFIXER_CONF={browsers: ['> 0.1%'],cascade: false}
-  
-gulp.task('sass', (cb) => {
-  pump([
-      gulp.src('public/sass/**/*.+(sass|scss)'),
-      sass(),
-      autoprefixer(AUTOPREFIXER_CONF),
-      gulp.dest('public/css'),
-      browserSync.stream()
-    ],
-    cb
-  );
-});
+const AUTOPREFIXER_CONF = {
+  browsers: ['> 0.1%'],
+  cascade: false
+}
 
-gulp.task('browser-sync', () =>
+function styles() {
+  return gulp.src('public/sass/**/*.+(sass|scss)')
+    .pipe(sass().on('error', sass.logError))
+    .pipe(autoprefixer(AUTOPREFIXER_CONF))
+    .pipe(gulp.dest('public/dist'))
+}
+
+function css() {
+  return gulp.src('public/sass/**/*.+(sass|scss)')
+    .pipe(sass().on('error', sass.logError))
+    .pipe(autoprefixer(AUTOPREFIXER_CONF))
+    .pipe(cleanCSS({
+      level: 2
+    }))
+    .pipe(gulp.dest('public/dist'));
+  //cb()
+}
+
+function watch() {
   browserSync.init({
     server: "./public",
     files: "",
     notify: false
   })
-);
 
-gulp.task('watch', ['browser-sync', 'sass'], () => {
-  gulp.watch(['public/sass/**/*.+(sass|scss)'], ['sass']);
-  gulp.watch(['*.html', 'public/js/**/*.js']).on('change', browserSync.reload);
-});
+  gulp.watch(['public/sass/**/*.+(sass|scss)'], css);
+  gulp.watch(['public/js/**/*.js'], scripts);
+  gulp.watch(['public/*.html']).on('change', browserSync.reload);
+}
 
-gulp.task('scripts', (cb) => {
-  pump([
-      gulp.src(['public/js/main.js','public/js/*.js']),
-      concat('all.min.js'),
-      babel({
-        presets: ['@babel/env']
-      }),
-      uglify(),
-      gulp.dest('public/dist/')
-    ],
-    cb
-  );
-});
+function scripts() {
+  return gulp.src(['public/js/main.js', 'public/js/*.js'])
+    .pipe(concat('all.min.js'))
+    .pipe(babel({
+      presets: ['@babel/env']
+    }))
+    .pipe(uglify({
+      toplevel: true
+    }))
+    .pipe(gulp.dest('public/dist'))
+}
 
-gulp.task('del', () => del.sync(['public/dist']));
+function clean() {
+  return del(['public/dist'])
+}
 
-gulp.task('build', ['del', 'scripts'], (cb) => {
-  pump([
-      gulp.src('public/sass/**/*.+(sass|scss)'),
-      sass({
-        outputStyle: 'compressed'
-      }),
-      autoprefixer(AUTOPREFIXER_CONF),
-      gulp.dest('public/dist')
-    ],
-    cb
-  );
-});
+gulp.task('watch', watch);
+gulp.task('del', clean);
+gulp.task('sass', styles);
+gulp.task('build', gulp.series('del', gulp.parallel(scripts, css)));
