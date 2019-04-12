@@ -1,4 +1,6 @@
 const gulp = require('gulp'),
+  gulpif = require('gulp-if'),
+  minimist = require('minimist'),
   browserSync = require('browser-sync').create(),
   sass = require('gulp-sass'),
   autoprefixer = require('gulp-autoprefixer'),
@@ -8,27 +10,28 @@ const gulp = require('gulp'),
   uglify = require('gulp-uglify'),
   del = require('del');
 
-const AUTOPREFIXER_CONF = {
-  browsers: ['> 0.1%'],
-  cascade: false
-}
+  const knownOptions = {
+    string: 'env',
+    default: {
+      env: process.env.NODE_ENV || 'production'
+    }
+  };
+  
+  const options = minimist(process.argv.slice(2), knownOptions);
 
 function styles() {
-  return gulp.src('public/sass/**/*.+(sass|scss)')
+  return gulp.src('sass/**/*.+(sass|scss)')
     .pipe(sass().on('error', sass.logError))
-    .pipe(autoprefixer(AUTOPREFIXER_CONF))
-    .pipe(gulp.dest('public/dist'))
-}
-
-function css() {
-  return gulp.src('public/sass/**/*.+(sass|scss)')
-    .pipe(sass().on('error', sass.logError))
-    .pipe(autoprefixer(AUTOPREFIXER_CONF))
-    .pipe(cleanCSS({
-      level: 2
+    .pipe(autoprefixer({
+      browsers: ['> 0.1%'],
+      cascade: false
     }))
-    .pipe(gulp.dest('public/dist'));
-  //cb()
+    .pipe(
+      gulpif(options.env === 'production', cleanCSS({
+        level: 2
+      }))
+    )
+    .pipe(gulp.dest('dist'));
 }
 
 function watch() {
@@ -38,7 +41,7 @@ function watch() {
     notify: false
   })
 
-  gulp.watch(['public/sass/**/*.+(sass|scss)'], css);
+  gulp.watch(['public/sass/**/*.+(sass|scss)'], styles);
   gulp.watch(['public/js/**/*.js'], scripts);
   gulp.watch(['public/*.html']).on('change', browserSync.reload);
 }
@@ -62,4 +65,4 @@ function clean() {
 gulp.task('watch', watch);
 gulp.task('del', clean);
 gulp.task('sass', styles);
-gulp.task('build', gulp.series('del', gulp.parallel(scripts, css)));
+gulp.task('build', gulp.series('del', gulp.parallel(scripts, styles)));
