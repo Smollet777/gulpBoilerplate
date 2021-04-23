@@ -9,6 +9,7 @@
     "sass": "node node_modules/gulp/bin/gulp.js sass --env development",
     "postinstall": "node node_modules/gulp/bin/gulp.js build"
   },
+  "browserslist": ["> 0.1%"],
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.4.0",
@@ -23,6 +24,6 @@
     "gulp-if": "^2.0.2",
     "gulp-sass": "^4.0.2",
     "gulp-uglify": "^3.0.2",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.5"
   }
 }

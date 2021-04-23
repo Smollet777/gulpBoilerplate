@@ -23,7 +23,6 @@ function styles() {
   return gulp.src('sass/**/*.+(sass|scss)')
     .pipe(sass().on('error', sass.logError))
     .pipe(autoprefixer({
-      browsers: ['> 0.1%'],
       cascade: false
     }))
     .pipe(
