@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node node_modules/gulp/bin/gulp.js watch",
+    "start": "node node_modules/gulp/bin/gulp.js",
     "del": "node node_modules/gulp/bin/gulp.js del",
     "build": "node node_modules/gulp/bin/gulp.js build",
-    "sass": "node node_modules/gulp/bin/gulp.js sass --env development",
+    "scripts": "node node_modules/gulp/bin/gulp.js scripts",
+    "styles": "node node_modules/gulp/bin/gulp.js styles --env development",
     "postinstall": "node node_modules/gulp/bin/gulp.js build"
   },
   "browserslist": ["> 0.1%"],
@@ -19,7 +20,6 @@
     "gulp": "^4.0.0",
     "gulp-autoprefixer": "^6.0.0",
     "gulp-babel": "^8.0.0",
-    "gulp-clean-css": "^4.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-if": "^2.0.2",
     "gulp-sass": "^4.0.2",

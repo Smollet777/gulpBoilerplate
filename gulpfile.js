@@ -1,10 +1,9 @@
-const gulp = require('gulp'),
+const { watch, src, dest} = require('gulp'),
   gulpif = require('gulp-if'),
   minimist = require('minimist'),
   browserSync = require('browser-sync').create(),
   sass = require('gulp-sass'),
   autoprefixer = require('gulp-autoprefixer'),
-  cleanCSS = require('gulp-clean-css'),
   concat = require('gulp-concat'),
   babel = require('gulp-babel'),
   uglify = require('gulp-uglify'),
@@ -20,48 +19,61 @@ const gulp = require('gulp'),
   const options = minimist(process.argv.slice(2), knownOptions);
 
 function styles() {
-  return gulp.src('sass/**/*.+(sass|scss)')
-    .pipe(sass().on('error', sass.logError))
-    .pipe(autoprefixer({
-      cascade: false
-    }))
-    .pipe(
-      gulpif(options.env === 'production', cleanCSS({
-        level: 2
+  return src('app/sass/main.+(sass|scss)')
+      .pipe(
+        gulpif(options.env === 'production', 
+          sass({outputStyle: 'compressed'}).on('error', sass.logError), 
+          sass().on('error', sass.logError)
+        ))
+      .pipe(concat('style.min.css'))
+      .pipe(autoprefixer({
+        grid: true,
+        cascade: false
       }))
-    )
-    .pipe(gulp.dest('dist'));
+      .pipe(dest('app/css'))
+      .pipe(browserSync.stream());
 }
 
-function watch() {
+function bs(){
+  clean()
   browserSync.init({
-    server: "./public",
-    files: "",
+    server: "./app",
     notify: false
   })
 
-  gulp.watch(['public/sass/**/*.+(sass|scss)'], styles);
-  gulp.watch(['public/js/**/*.js'], scripts);
-  gulp.watch(['public/*.html']).on('change', browserSync.reload);
+  watch(['app/sass/**/*.+(sass|scss)'], styles);
+  watch(['app/js/**/*.js','!app/js/main.min.js'], scripts);
+  watch(['app/*.html']).on('change', browserSync.reload);
 }
 
 function scripts() {
-  return gulp.src(['public/js/main.js', 'public/js/*.js'])
-    .pipe(concat('all.min.js'))
+  return src(['app/js/*.js', 'app/js/main.js','!app/js/main.min.js'])
+    .pipe(concat('main.min.js'))
     .pipe(babel({
       presets: ['@babel/env']
     }))
     .pipe(uglify({
       toplevel: true
     }))
-    .pipe(gulp.dest('public/dist'))
+    .pipe(dest('app/js'))
+    .pipe(browserSync.stream());
 }
 
 function clean() {
-  return del(['public/dist'])
+  return del(['dist','app/css/','app/js/main.min.js'])
 }
 
-gulp.task('watch', watch);
-gulp.task('del', clean);
-gulp.task('sass', styles);
-gulp.task('build', gulp.series('del', gulp.parallel(scripts, styles)));
+function build(){
+  return src([
+    'app/css/style.min.css',
+    'app/js/main.min.js',
+    'app/*.html'
+  ],{base:'app'})
+  .pipe(dest('dist'))
+} 
+
+exports.styles = styles;
+exports.default = bs;
+exports.scripts = scripts;
+exports.del = clean;
+exports.build = build;
