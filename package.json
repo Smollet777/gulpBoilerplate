@@ -10,7 +10,9 @@
     "styles": "node node_modules/gulp/bin/gulp.js styles --env development",
     "postinstall": "node node_modules/gulp/bin/gulp.js build"
   },
-  "browserslist": ["> 0.1%"],
+  "browserslist": [
+    "> 0.1%"
+  ],
   "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.4.0",
@@ -22,6 +24,7 @@
     "gulp-babel": "^8.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-if": "^2.0.2",
+    "gulp-imagemin": "^7.1.0",
     "gulp-sass": "^4.0.2",
     "gulp-uglify": "^3.0.2",
     "minimist": "^1.2.5"

@@ -7,7 +7,8 @@ const { watch, src, dest} = require('gulp'),
   concat = require('gulp-concat'),
   babel = require('gulp-babel'),
   uglify = require('gulp-uglify'),
-  del = require('del');
+  del = require('del'),
+  imagemin = require('gulp-imagemin');
 
   const knownOptions = {
     string: 'env',
@@ -59,11 +60,28 @@ function scripts() {
     .pipe(browserSync.stream());
 }
 
+function images() {
+  return src('app/images/**/*')
+  .pipe(imagemin([
+    imagemin.gifsicle({interlaced: true}),
+    imagemin.mozjpeg({quality: 75, progressive: true}),
+    imagemin.optipng({optimizationLevel: 5}),
+    imagemin.svgo({
+        plugins: [
+            {removeViewBox: true},
+            {cleanupIDs: false}
+              ]
+            })
+    ]))
+  .pipe(dest('dist/images'))
+}
+
 function clean() {
   return del(['dist','app/css/','app/js/main.min.js'])
 }
 
 function build(){
+  images()
   return src([
     'app/css/style.min.css',
     'app/js/main.min.js',
