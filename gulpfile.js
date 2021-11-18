@@ -1,8 +1,8 @@
-const { watch, src, dest} = require('gulp'),
+const gulp = require('gulp'),
   gulpif = require('gulp-if'),
   minimist = require('minimist'),
   browserSync = require('browser-sync').create(),
-  sass = require('gulp-sass'),
+  sass = require('gulp-sass')(require('sass')),
   autoprefixer = require('gulp-autoprefixer'),
   concat = require('gulp-concat'),
   babel = require('gulp-babel'),
@@ -20,7 +20,7 @@ const { watch, src, dest} = require('gulp'),
   const options = minimist(process.argv.slice(2), knownOptions);
 
 function styles() {
-  return src('app/sass/main.+(sass|scss)')
+  return gulp.src('app/sass/**/*.+(sass|scss)')
       .pipe(
         gulpif(options.env === 'production', 
           sass({outputStyle: 'compressed'}).on('error', sass.logError), 
@@ -31,24 +31,23 @@ function styles() {
         grid: true,
         cascade: false
       }))
-      .pipe(dest('app/css'))
+      .pipe(gulp.dest('app/css'))
       .pipe(browserSync.stream());
 }
 
 function bs(){
-  clean()
   browserSync.init({
     server: "./app",
     notify: false
   })
 
-  watch(['app/sass/**/*.+(sass|scss)'], styles);
-  watch(['app/js/**/*.js','!app/js/main.min.js'], scripts);
-  watch(['app/*.html']).on('change', browserSync.reload);
+  gulp.watch(['app/sass/**/*.+(sass|scss)'], styles);
+  gulp.watch(['app/js/**/*.js','!app/js/main.min.js'], scripts);
+  gulp.watch(['app/*.html']).on('change', browserSync.reload);
 }
 
 function scripts() {
-  return src(['app/js/*.js', 'app/js/main.js','!app/js/main.min.js'])
+  return gulp.src(['app/js/main.js', 'app/js/*.js', '!app/js/main.min.js'])
     .pipe(concat('main.min.js'))
     .pipe(babel({
       presets: ['@babel/env']
@@ -56,12 +55,12 @@ function scripts() {
     .pipe(uglify({
       toplevel: true
     }))
-    .pipe(dest('app/js'))
+    .pipe(gulp.dest('app/js'))
     .pipe(browserSync.stream());
 }
 
 function images() {
-  return src('app/images/**/*')
+  return gulp.src('app/images/**/*')
   .pipe(imagemin([
     imagemin.gifsicle({interlaced: true}),
     imagemin.mozjpeg({quality: 75, progressive: true}),
@@ -73,25 +72,15 @@ function images() {
               ]
             })
     ]))
-  .pipe(dest('dist/images'))
+  .pipe(gulp.dest('dist/images'))
 }
 
 function clean() {
   return del(['dist','app/css/','app/js/main.min.js'])
 }
 
-function build(){
-  images()
-  return src([
-    'app/css/style.min.css',
-    'app/js/main.min.js',
-    'app/*.html'
-  ],{base:'app'})
-  .pipe(dest('dist'))
-} 
-
-exports.styles = styles;
-exports.default = bs;
-exports.scripts = scripts;
-exports.del = clean;
-exports.build = build;
+gulp.task('watch', bs);
+gulp.task('del', clean);
+gulp.task('scripts',scripts);
+gulp.task('styles', styles);
+gulp.task('build', gulp.series('del', gulp.parallel(scripts, styles, images)));
